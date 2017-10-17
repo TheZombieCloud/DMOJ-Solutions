@@ -1,0 +1,54 @@
+#include <iostream>
+#include <bits/stdc++.h>
+
+using namespace std;
+
+vector <int> adj [500005];
+int lengths [500005], slengths[500005], vis [500005], final2[500005];
+
+void DFS (int cur, int pre){
+    for (int i = 0;i<adj[cur].size();i++){
+        int rn = adj[cur][i];
+        if (rn==pre) continue;
+        DFS(rn, cur);
+        if (lengths[rn]+1>lengths[cur]){
+            slengths[cur] = lengths[cur];
+            lengths[cur] = lengths[rn]+1;
+            vis[cur] = rn;
+        }
+        else if (lengths[rn]+1>slengths[cur]){
+            slengths[cur] = lengths[rn]+1;
+        }
+    }
+}
+
+void DFS2 (int cur, int curmax, int pre){
+    final2[cur] = max(lengths[cur], curmax);
+    for (int i = 0;i<adj[cur].size();i++){
+        int rn = adj[cur][i];
+        if (rn==pre) continue;
+        if (vis[cur]==rn){
+            DFS2(rn, max(slengths[cur]+1, curmax+1), cur);
+        }
+        else {
+            DFS2(rn, max (curmax+1, lengths[cur]+1), cur);
+        }
+    }
+}
+
+int main()
+{
+    int nodes;
+    scanf("%d", &nodes);
+    for (int i = 1;i<nodes;i++){
+        int first, sec;
+        scanf("%d %d", &first, &sec);
+        adj[first].push_back(sec);
+        adj[sec].push_back(first);
+    }
+    DFS(1, -1);
+    DFS2(1, 0, -1);
+    for (int i = 1;i<=nodes;i++){
+        printf("%d\n",final2[i] + 1);
+    }
+}

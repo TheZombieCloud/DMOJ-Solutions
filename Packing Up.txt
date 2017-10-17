@@ -1,0 +1,30 @@
+#include <iostream>
+#include <bits/stdc++.h>
+
+using namespace std;
+
+int main()
+{
+    int books, cons;
+    scanf("%d %d", &books, &cons);
+    long long prefix [books+1];
+    prefix[0] = 0;
+    for (int i = 1;i<=books;i++){
+        scanf("%lld", &prefix[i]);
+        prefix[i] += prefix[i-1];
+    }
+    long long dp [books+1];
+    memset(dp, 0x3f, sizeof(dp));
+    dp[0] = 0;
+    int decision = 0;
+    for (int i = 1;i<=books;i++){
+        for (int j = decision;j<i;j++){
+            long long cost = prefix[i]-prefix[j] + (i-j-1);
+            if ((cost-cons)*(cost-cons)+dp[j]<dp[i]){
+                dp[i] = (cost-cons)*(cost-cons)+dp[j];
+                decision = j;
+            }
+        }
+    }
+    printf("%lld", dp[books]);
+}

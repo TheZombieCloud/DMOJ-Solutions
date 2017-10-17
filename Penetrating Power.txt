@@ -1,0 +1,120 @@
+import java.io.*;
+import java.util.*;
+/**
+ *
+ * @author Alexander Ma
+ */
+public class PenetratingPower {
+
+    /**
+     * @param args the command line arguments
+     */
+    static Node [] seg;
+    
+    public static void max (int idx){
+        seg[idx].sum = Math.max(seg[idx*2].sum, seg[idx*2+1].sum);
+    }
+    
+    public static void push_down (int idx){
+        if (seg[idx].lazy!=0){
+            seg[idx].sum += seg[idx].lazy;
+            if (seg[idx].l!=seg[idx].r){
+                seg[idx*2].lazy += seg[idx].lazy;
+                seg[idx*2+1].lazy += seg[idx].lazy;
+            }
+            seg[idx].lazy = 0;
+        }
+    }
+    
+    public static void build (int l, int r, int idx){
+        seg[idx].l = l;
+        seg[idx].r = r;
+        if (l==r){
+            return;
+        }
+        int mid = (l+r)/2;
+        build(l,mid,2*idx);
+        build(mid+1,r,2*idx+1);
+    }
+    
+    public static void rupdate (int l, int r, int idx, int value){
+        push_down(idx);
+        if (seg[idx].l>=l&&seg[idx].r<=r){
+            seg[idx].lazy += value;
+            push_down(idx);
+            return;
+        }
+        else if (seg[idx].l>r||seg[idx].r<l){
+            return;
+        }
+        rupdate(l, r, idx*2, value);
+        rupdate(l, r, idx*2+1, value);
+        max(idx);
+    }
+    
+    public static long query (int l, int r, int idx){
+        push_down(idx);
+        if (seg[idx].l>=l&&seg[idx].r<=r){
+            return seg[idx].sum;
+        }
+        else if (seg[idx].l>r||seg[idx].r<l){
+            return 0;
+        }
+        long ansL = query (l, r, idx*2);
+        long ansR = query (l, r, idx*2+1);
+        return Math.max(ansL, ansR);
+    }
+    
+    public static void main(String[] args) throws IOException{
+        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+        int n, k ,q;
+        String [] tokens = input.readLine().split(" ");
+        n = Integer.parseInt(tokens[0]);
+        k = Integer.parseInt(tokens[1]);
+        q = Integer.parseInt(tokens[2]);
+        seg = new Node [2*(int)Math.pow(2, Math.ceil(Math.log(n)/Math.log(2)))];
+        for (int i = 0;i<seg.length;i++){
+            seg[i] = new Node(0,0,0,0);
+        }
+        boolean g = false;
+        if (k==0||n==0){
+            g = true;
+        }
+        else {
+            build (1, n, 1);
+        }
+        for (int i = 0;i<q;i++){
+            tokens = input.readLine().split(" ");
+            int type = Integer.parseInt(tokens[0]);
+            if (type==0){
+                if (!g){
+                    int pos = Integer.parseInt(tokens[1])+1;
+                    int value = Integer.parseInt(tokens[2]);
+                    rupdate (Math.max(1, pos-k+1), pos, 1, value);
+                }
+            }
+            else {
+                if (g){
+                    System.out.println("0");
+                }
+                else {
+                    int l = Integer.parseInt(tokens[1])+1;
+                    int r = Integer.parseInt(tokens[2])+1;
+                    System.out.println(query(l,r,1));
+                }
+            }
+        }
+    }
+    static class Node {
+        int l;
+        int r;
+        long sum;
+        long lazy;
+        Node (int l, int r, long sum, long lazy){
+            this.l = l;
+            this.r = r;
+            this.sum = sum;
+            this.lazy = lazy;
+        }
+    }
+}

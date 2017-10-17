@@ -1,0 +1,223 @@
+import java.io.*;
+/**
+ *
+ * @author Alexander Ma
+ */
+public class LeleiAndContest {
+
+    /**
+     * @param args the command line arguments
+     */
+    public static Node seg[];
+    public static int M;
+    
+    public static void build (int l, int r, int idx, int [] arr){
+        seg[idx] = new Node (l,r,0,0);
+        if (l==r){
+            seg[idx].sum = arr[l];
+            return;
+        }
+        int mid = (l+r)/2;
+        build(l,mid,2*idx, arr);
+        build(mid+1,r,2*idx+1,arr);
+        sum(idx);
+    }
+    
+    public static void rupdate (int start, int end, int value, int idx){
+        push_down(idx);
+        if (seg[idx].l>=start&&seg[idx].r<=end){
+            seg[idx].lazy = (seg[idx].lazy+value)%M;
+            push_down(idx);
+            return;
+        }
+        else if (seg[idx].l>end||seg[idx].r<start){
+            return;
+        }
+        rupdate(start, end, value, idx*2);
+        rupdate(start, end, value, idx*2+1);
+        sum(idx);
+    }
+    
+    public static long query2 (int start, int end, int idx){
+        push_down(idx);
+        if (seg[idx].l>=start&&seg[idx].r<=end){
+            return seg[idx].sum;
+        }
+        else if (seg[idx].l>end||seg[idx].r<start){
+            return 0;
+        }
+        long ansL = query2 (start, end, idx*2);
+        long ansR = query2 (start, end, idx*2+1);
+        return (ansL + ansR)%M;
+    }
+    
+    public static void push_down (int idx){
+        if (seg[idx].lazy!=0){
+            seg[idx].sum = (seg[idx].sum + (seg[idx].lazy*(seg[idx].r-seg[idx].l+1)))%M;
+            if (seg[idx].l!=seg[idx].r){
+                seg[idx*2].lazy = (seg[idx*2].lazy+seg[idx].lazy)%M;
+                seg[idx*2+1].lazy = (seg[idx*2+1].lazy+seg[idx].lazy)%M;
+            }
+            seg[idx].lazy = 0;
+        }
+    }
+    
+    public static void sum (int idx){
+        seg[idx].sum = (seg[idx*2].sum + seg[idx*2+1].sum)%M;
+    }
+    
+    public static void main(String[] args) throws IOException{
+        Reader input = new Reader();
+        OutputStream out = new BufferedOutputStream(System.out);
+        M = input.nextInt();
+        int n = input.nextInt();
+        int queries = input.nextInt();
+        int [] arr = new int[n+1];
+        for (int i = 1;i<=n;i++){
+            arr[i] = input.nextInt();
+        }
+        seg = new Node [2*(int)Math.pow(2, Math.ceil(Math.log(n)/Math.log(2)))];
+        build (1,n,1,arr);
+        for (int i = 0;i<queries;i++){
+            if (input.nextInt()==1){
+                rupdate(input.nextInt(), input.nextInt(), input.nextInt(), 1);
+            }
+            else {
+                out.write((query2(input.nextInt(), input.nextInt(), 1)+ "\n").getBytes());
+            }
+        }
+        out.flush();
+    }
+    static class Node {
+        int l;
+        int r;
+        long sum;
+        long lazy;
+        Node (int l, int r, long sum, long lazy){
+            this.l = l;
+            this.r = r;
+            this.sum = sum;
+            this.lazy = lazy;
+        }
+    }
+    static class Reader
+    {
+        final private int BUFFER_SIZE = 1 << 16;
+        private DataInputStream din;
+        private byte[] buffer;
+        private int bufferPointer, bytesRead;
+ 
+        public Reader()
+        {
+            din = new DataInputStream(System.in);
+            buffer = new byte[BUFFER_SIZE];
+            bufferPointer = bytesRead = 0;
+        }
+ 
+        public Reader(String file_name) throws IOException
+        {
+            din = new DataInputStream(new FileInputStream(file_name));
+            buffer = new byte[BUFFER_SIZE];
+            bufferPointer = bytesRead = 0;
+        }
+ 
+        public String readLine() throws IOException
+        {
+            byte[] buf = new byte[64]; // line length
+            int cnt = 0, c;
+            while ((c = read()) != -1)
+            {
+                if (c == '\n')
+                    break;
+                buf[cnt++] = (byte) c;
+            }
+            return new String(buf, 0, cnt);
+        }
+ 
+        public int nextInt() throws IOException
+        {
+            int ret = 0;
+            byte c = read();
+            while (c <= ' ')
+                c = read();
+            boolean neg = (c == '-');
+            if (neg)
+                c = read();
+            do
+            {
+                ret = ret * 10 + c - '0';
+            }  while ((c = read()) >= '0' && c <= '9');
+ 
+            if (neg)
+                return -ret;
+            return ret;
+        }
+ 
+        public long nextLong() throws IOException
+        {
+            long ret = 0;
+            byte c = read();
+            while (c <= ' ')
+                c = read();
+            boolean neg = (c == '-');
+            if (neg)
+                c = read();
+            do {
+                ret = ret * 10 + c - '0';
+            }
+            while ((c = read()) >= '0' && c <= '9');
+            if (neg)
+                return -ret;
+            return ret;
+        }
+ 
+        public double nextDouble() throws IOException
+        {
+            double ret = 0, div = 1;
+            byte c = read();
+            while (c <= ' ')
+                c = read();
+            boolean neg = (c == '-');
+            if (neg)
+                c = read();
+ 
+            do {
+                ret = ret * 10 + c - '0';
+            }
+            while ((c = read()) >= '0' && c <= '9');
+ 
+            if (c == '.')
+            {
+                while ((c = read()) >= '0' && c <= '9')
+                {
+                    ret += (c - '0') / (div *= 10);
+                }
+            }
+ 
+            if (neg)
+                return -ret;
+            return ret;
+        }
+ 
+        private void fillBuffer() throws IOException
+        {
+            bytesRead = din.read(buffer, bufferPointer = 0, BUFFER_SIZE);
+            if (bytesRead == -1)
+                buffer[0] = -1;
+        }
+ 
+        private byte read() throws IOException
+        {
+            if (bufferPointer == bytesRead)
+                fillBuffer();
+            return buffer[bufferPointer++];
+        }
+ 
+        public void close() throws IOException
+        {
+            if (din == null)
+                return;
+            din.close();
+        }
+    }
+}

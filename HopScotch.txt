@@ -1,0 +1,84 @@
+import java.util.*;
+import java.io.*;
+/**
+ *
+ * @author alexm
+ */
+public class HopScotch2 {
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) throws IOException{
+        BufferedReader input = new BufferedReader (new InputStreamReader(System.in));
+        int steps = Integer.parseInt(input.readLine());
+        int [] arr = new int[steps];
+        String [] tokens = input.readLine().split(" ");
+        for (int i = 0;i<steps;i++){
+            arr[i] = Integer.parseInt(tokens[i]);
+        }
+        int [] nxt = new int [steps];
+        int [] hop = new int [steps];
+        ArrayList <Integer> bor = new ArrayList();
+        for (int i = 0;i<steps;i+=Math.ceil(Math.sqrt(steps))){
+            bor.add(i);
+        }
+        bor.add(steps);
+        int count2 = bor.size()-1;
+        for (int i = steps-1;i>=0;i--){
+            if (i<bor.get(count2)){
+                count2--;
+            }
+            if (i+arr[i]>=bor.get(count2+1)){
+                nxt[i] = i+arr[i];
+                hop[i] = 1;
+            }
+            else {
+                nxt[i] = nxt[i+arr[i]];
+                hop[i] = hop[i+arr[i]]+1;
+            }
+        }
+        int q = Integer.parseInt(input.readLine());
+        for (int i = 0;i<q;i++){
+            tokens = input.readLine().split(" ");
+            if (tokens[0].equals("1")){
+                int block = Integer.parseInt(tokens[1]);
+                int count = 0;
+                while (block<steps){
+                    count += hop[block];
+                    block = nxt[block];
+                }
+                System.out.println(count);
+            }
+            else {
+                int block = Integer.parseInt(tokens[1]);
+                int pow = Integer.parseInt(tokens[2]);
+                int stop = 0;
+                int temp = 0;
+                for (int c = bor.size()-2;c>=0;c--){
+                    if (bor.get(c)<=block){
+                        stop = bor.get(c);
+                        temp = c+1;
+                        break;
+                    }
+                }
+                arr[block] = pow;
+                if (block+arr[block]>=bor.get(temp)){
+                    nxt[block] = block+arr[block];
+                    hop[block] = 1;
+                }
+                else {
+                    nxt[block] = nxt[block+arr[block]];
+                    hop[block] = hop[block+arr[block]]+1;
+                }
+                for (int c = block-1;c>=stop;c--){
+                    if (hop[c]!=1){
+                        nxt[c] = nxt[c+arr[c]];
+                        hop[c] = hop[c+arr[c]]+1;
+                    }
+                }
+            }
+        }
+    }
+    
+}

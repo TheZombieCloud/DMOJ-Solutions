@@ -1,0 +1,80 @@
+import java.util.*;
+import java.io.*;
+/**
+ *
+ * @author alexm
+ */
+public class RainfallStorage {
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) throws IOException{
+        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+        int number = Integer.parseInt(input.readLine());
+        int [] pillars = new int[number];
+        String [] tokens = input.readLine().split(" ");
+        boolean [] dp = new boolean[25001];
+        boolean [] dp2 = new boolean[25001];
+        for (int i = 0;i<number;i++){
+            pillars[i] = Integer.parseInt(tokens[i]);
+        }
+        Arrays.sort(pillars);
+        dp[0] = true;
+        boolean g = false;
+        HashSet <Integer> set = new HashSet();
+        for (int i = pillars.length-2;i>=0;i--){
+            int cur = pillars[i];
+            HashSet <Integer> set2 = new HashSet();
+            for (Iterator <Integer> it = set.iterator(); it.hasNext();){
+                int next = it.next();
+                set2.add(Math.max(0, next-cur));
+            }
+            if (i!=pillars.length-2){
+                if (!g){
+                    dp2 = new boolean[25001];
+                    for (int c = 0;c<dp2.length;c++){
+                        if (dp[c]==true){
+                            dp2[c] = true;
+                            for (Iterator <Integer> it = set2.iterator(); it.hasNext();){
+                                dp2[c+it.next()] = true;
+                            }
+                        }
+                    }
+                    g = true;
+                }
+                else {
+                    dp = new boolean[25001];
+                    for (int c = 0;c<dp.length;c++){
+                        if (dp2[c]==true){
+                            dp[c] = true;
+                            for (Iterator<Integer> it = set2.iterator(); it.hasNext();){
+                                dp[c+it.next()] = true;
+                            }
+                        }
+                    }
+                    g = false;
+                }
+            }
+            set.add(pillars[i]);
+        }
+        if (g){
+            for (int i = 0;i<dp2.length;i++){
+                if (dp2[i]==true){
+                    System.out.print(i + " ");
+                }
+            }
+            System.out.println();
+        }
+        else {
+            for (int i = 0;i<dp.length;i++){
+                if (dp[i]==true){
+                    System.out.print(i + " ");
+                }
+            }
+            System.out.println();
+        }
+    }
+    
+}
+

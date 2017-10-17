@@ -1,0 +1,160 @@
+import java.util.*;
+import java.io.*;
+/**
+ *
+ * @author Alexander Ma
+ */
+public class RaiderFinal {
+    
+    static int [] costs;
+    static ArrayList <Integer> [] adj;
+    static boolean [] vis;
+    static int [] low;
+    static Stack <Integer> q = new Stack();
+    static int time = 0;
+    static int [] SCC;
+    static int count = 1;
+    static int [] coins;
+    
+    static void DFS (int cur){
+        vis[cur] = true;
+        low[cur] = time++;
+        q.add(cur);
+        boolean isCompRoot = true;
+        for (int i = 0;i<adj[cur].size();i++){
+            int rn = adj[cur].get(i);
+            if (!vis[rn]){
+                DFS(rn);
+            }
+            if (low[cur]>low[rn]){
+                low[cur] = low[rn];
+                isCompRoot = false;
+            }
+        }
+        if (isCompRoot){
+            while (true){
+                int cur2 = q.pop();
+                low[cur2] = Integer.MAX_VALUE;
+                SCC[cur2] = count;
+                if (cur2==cur) break;
+            }
+            count++;
+        }
+    }
+    
+    static int [] pick;
+    static int [] npick;
+    static int [] count2;
+    static int [] count3;
+    
+    static void DP (int cur, ArrayList <Integer> [] adj2, boolean [] vis){
+        vis[cur] = true;
+        for (int i = 0;i<adj2[cur].size();i++){
+            int rn = adj2[cur].get(i);
+            if (!vis[rn]){
+                DP(rn, adj2, vis);
+            }
+            if (count2[rn]!=0){
+                if (npick[rn]+coins[cur]>pick[cur]){
+                    pick[cur] = npick[rn] + coins[cur];
+                    count2[cur] = count3[rn]%1000000007;
+                }
+                else if (npick[rn]+coins[cur]==pick[cur]){
+                    count2[cur] = (count2[cur] + count3[rn])%1000000007;
+                }
+                if (npick[rn]>npick[cur]){
+                    npick[cur] = npick[rn];
+                    count3[cur] = count3[rn]%1000000007;
+                }
+                else if (npick[rn]==npick[cur]){
+                    count3[cur] = (count3[cur] + count3[rn])%1000000007;
+                }
+                if (pick[rn]>npick[cur]){
+                    npick[cur] = pick[rn];
+                    count3[cur] = count2[rn]%1000000007;
+                }
+                else if (pick[rn]==npick[cur]){
+                    count3[cur] = (count3[cur] + count2[rn])%1000000007;
+                }
+            }
+        }
+    }
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) throws IOException{
+        BufferedReader input = new BufferedReader (new InputStreamReader(System.in));
+        int nodes, roads;
+        String [] tokens = input.readLine().split(" ");
+        nodes = Integer.parseInt(tokens[0]);
+        roads = Integer.parseInt(tokens[1]);
+        costs = new int [nodes+1];
+        tokens = input.readLine().split(" ");
+        for (int i = 1;i<=nodes;i++){
+            costs[i] = Integer.parseInt(tokens[i-1]);
+        }
+        adj = new ArrayList [nodes+1];
+        for (int i = 1;i<=nodes;i++){
+            adj[i] = new ArrayList ();
+        }
+        for (int i = 1;i<=roads;i++){
+            tokens = input.readLine().split(" ");
+            int start = Integer.parseInt(tokens[0]);
+            int end = Integer.parseInt(tokens[1]);
+            adj[start].add(end);
+        }
+        vis = new boolean [nodes+1];
+        low = new int [nodes+1];
+        SCC = new int[nodes+1];
+        for (int i = 1;i<=nodes;i++){
+            if (!vis[i]){
+                DFS(i);
+            }
+        }
+        coins = new int [count];
+        for (int i = 1;i<=nodes;i++){
+            int SC = SCC[i];
+            coins[SC] += costs[i];
+        }
+        ArrayList <Integer> [] adj2 = new ArrayList [count];
+        for (int i = 1;i<count;i++){
+            adj2[i] = new ArrayList();
+        }
+        Stack <Integer> q2 = new Stack();
+        q2.add(1);
+        vis = new boolean[nodes+1];
+        while (!q2.isEmpty()){
+            int cur2 = q2.pop();
+            if (!vis[cur2]){
+                vis[cur2] = true;
+                for (int i = 0;i<adj[cur2].size();i++){
+                    int rn = adj[cur2].get(i);
+                    if (!vis[rn]){
+                        q2.add(rn);
+                    }
+                    if (SCC[cur2]!=SCC[rn]){
+                        adj2[SCC[cur2]].add(SCC[rn]);
+                    }
+                }
+            }
+        }
+        pick = new int [count];
+        npick = new int [count];
+        count2 = new int [count];
+        count3 = new int [count];
+        count2[SCC[nodes]] = 1;
+        count3[SCC[nodes]] = 1;
+        pick[SCC[nodes]] = coins[SCC[nodes]];
+        DP(SCC[1], adj2, new boolean [count]);
+        if (pick[SCC[1]]>npick[SCC[1]]){
+            System.out.println(pick[SCC[1]] + " " + count2[SCC[1]]);
+        }
+        else if (pick[SCC[1]]==npick[SCC[1]]){
+            System.out.println(pick[SCC[1]] + " " + (int)(count2[SCC[1]] + count3[SCC[1]]));
+        }
+        else {
+            System.out.println(npick[SCC[1]] + " " + count3[SCC[1]]);
+        }
+    }
+    
+}

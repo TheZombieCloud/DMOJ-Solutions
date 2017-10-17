@@ -1,0 +1,27 @@
+#include <bits/stdc++.h>
+using namespace std;
+int N, M, A[3002], B[102], dp[3002][102][102][2];
+int fun(int i, int l, int r, bool take){
+    if(i>N && l>r) return 0;
+    if(dp[i][l][r][take]) return dp[i][l][r][take];
+    int ret = 0;
+    if(i <= N){
+        ret = max(ret, fun(i+1, l, r, 0));
+        if(!take) ret = max(ret, A[i]+fun(i+1, l, r, 1));
+    }
+    if(l <= r){
+        ret = max(ret, fun(i, l+1, r, 0));
+        if(!take) ret = max(ret, B[r]+fun(i, l, r-1, 1));
+    }
+    return dp[i][l][r][take]=ret;
+}
+int main(){
+    scanf("%d", &N);
+    for(int i=1; i<=N; i++)
+        scanf("%d", &A[i]);
+    scanf("%d", &M);
+    for(int i=1; i<=M; i++)
+        scanf("%d", &B[i]);
+    sort(B+1, B+M+1);
+    printf("%d\n", fun(1, 1, M, 0));
+}

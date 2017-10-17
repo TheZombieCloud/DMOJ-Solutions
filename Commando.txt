@@ -1,0 +1,35 @@
+#include <iostream>
+#include <bits/stdc++.h>
+
+using namespace std;
+
+int main()
+{
+    long long soldiers;
+    scanf("%lld", &soldiers);
+    long long a, b, c;
+    scanf("%lld %lld %lld", &a, &b, &c);
+    long long values [soldiers+1];
+    for (int i = 1;i<=soldiers;i++){
+        scanf("%lld", &values[i]);
+        values[i] += values[i-1];
+    }
+    long long dp [soldiers+1];
+    for (int i = 1;i<=soldiers;i++){
+        dp[i] = LONG_LONG_MIN;
+    }
+    dp[0] = 0;
+    long long decision = 0;
+    for (int i = 1;i<=soldiers;i++){
+        for (int k = decision;k<i;k++){
+            long long x = values[i]-values[k];
+            long long sum = a*(x*x) + b*x + c;
+            sum += dp[k];
+            if (dp[i]<sum){
+                dp[i] = sum;
+                decision = k;
+            }
+        }
+    }
+    printf ("%lld", dp[soldiers]);
+}

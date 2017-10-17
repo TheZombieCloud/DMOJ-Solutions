@@ -1,0 +1,219 @@
+import java.util.*;
+import java.io.*;
+/**
+ *
+ * @author alexm
+ */
+public class NotEnoughServers {
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) throws IOException{
+        Reader input = new Reader();
+        int people = input.nextInt();
+        int tests = input.nextInt();
+        ArrayList<String> values = new ArrayList();
+        for (int i = 0;i<people;i++){
+            String temp = input.readLine();
+            int count = 0;
+            for (int j = 0;j<tests;j++){
+                if (temp.substring(j,j+1).equals("O")){
+                    count++;
+                }
+            }
+            if (count!=tests){
+                values.add(temp);
+            }
+            else {
+                people--;
+                i--;
+            }
+        }
+        if (values.isEmpty()){
+            System.out.println("1");
+            System.out.println("1");
+            System.exit(0);
+        }
+        int [] value = new int[tests+1];
+        for (int i = 0;i<tests;i++){
+            String temp = "";
+            for (int c = 0;c<people;c++){
+                if (values.get(c).substring(i,i+1).equals("X")){
+                    temp += 1;
+                }
+                else {
+                    temp += 0;
+                }
+            }
+            value[i+1] = Integer.parseInt(temp, 2);
+        }
+        int [][] dp = new int [tests+1][(int)Math.pow(2, people)];
+        //int [][] where = new int[tests+1][(int)Math.pow(2,people)];
+        for (int i = 0;i<=tests;i++){
+            //Arrays.fill(where[i],-1);
+            Arrays.fill(dp[i],Integer.MAX_VALUE);
+        }
+        dp[0][0] = 0;
+        for (int i = 0;i<=tests;i++){
+            for (int c = 0;c<(int)Math.pow(2,people);c++){
+                if (i==0&&c!=0){
+                    dp[i][c] = Integer.MAX_VALUE;
+                }
+                else if (i!=0){
+                    if (dp[i-1][c]!=Integer.MAX_VALUE){
+                        int res = c|value[i];
+                        if (dp[i-1][res]>dp[i-1][c]+1){
+                            dp[i][res] = Math.min(dp[i][res],dp[i-1][c]+1);
+                        }
+                        else {
+                            dp[i][res] = Math.min(dp[i][res],dp[i-1][res]);
+                        }
+                    }
+                    if (dp[i][c]==Integer.MAX_VALUE){
+                        dp[i][c] = dp[i-1][c];
+                    }
+                }
+            }
+        }
+        System.out.println(dp[tests][(int)Math.pow(2, people)-1]);
+        int start = (int)Math.pow(2,people)-1;
+        int start2 = dp[tests][(int)Math.pow(2,people)-1];
+        for (int i = tests-1;i>=0;i--){
+            if (dp[i][start]!=start2){
+                for (int c = 0;c<(int)Math.pow(2,people);c++){
+                    if ((c|value[i+1])==start&&dp[i][c]+1==start2){
+                        if (dp[i][c]!=start2){
+                            System.out.print((i+1) + " ");
+                            start = c;
+                            start2 = dp[i][c];
+                        }
+                        else {
+                            start = c;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    static class Reader
+    {
+        final private int BUFFER_SIZE = 1 << 16;
+        private DataInputStream din;
+        private byte[] buffer;
+        private int bufferPointer, bytesRead;
+ 
+        public Reader()
+        {
+            din = new DataInputStream(System.in);
+            buffer = new byte[BUFFER_SIZE];
+            bufferPointer = bytesRead = 0;
+        }
+ 
+        public Reader(String file_name) throws IOException
+        {
+            din = new DataInputStream(new FileInputStream(file_name));
+            buffer = new byte[BUFFER_SIZE];
+            bufferPointer = bytesRead = 0;
+        }
+ 
+        public String readLine() throws IOException
+        {
+            byte[] buf = new byte[64]; // line length
+            int cnt = 0, c;
+            while ((c = read()) != -1)
+            {
+                if (c == '\n')
+                    break;
+                buf[cnt++] = (byte) c;
+            }
+            return new String(buf, 0, cnt);
+        }
+ 
+        public int nextInt() throws IOException
+        {
+            int ret = 0;
+            byte c = read();
+            while (c <= ' ')
+                c = read();
+            boolean neg = (c == '-');
+            if (neg)
+                c = read();
+            do
+            {
+                ret = ret * 10 + c - '0';
+            }  while ((c = read()) >= '0' && c <= '9');
+ 
+            if (neg)
+                return -ret;
+            return ret;
+        }
+ 
+        public long nextLong() throws IOException
+        {
+            long ret = 0;
+            byte c = read();
+            while (c <= ' ')
+                c = read();
+            boolean neg = (c == '-');
+            if (neg)
+                c = read();
+            do {
+                ret = ret * 10 + c - '0';
+            }
+            while ((c = read()) >= '0' && c <= '9');
+            if (neg)
+                return -ret;
+            return ret;
+        }
+ 
+        public double nextDouble() throws IOException
+        {
+            double ret = 0, div = 1;
+            byte c = read();
+            while (c <= ' ')
+                c = read();
+            boolean neg = (c == '-');
+            if (neg)
+                c = read();
+ 
+            do {
+                ret = ret * 10 + c - '0';
+            }
+            while ((c = read()) >= '0' && c <= '9');
+ 
+            if (c == '.')
+            {
+                while ((c = read()) >= '0' && c <= '9')
+                {
+                    ret += (c - '0') / (div *= 10);
+                }
+            }
+ 
+            if (neg)
+                return -ret;
+            return ret;
+        }
+ 
+        private void fillBuffer() throws IOException
+        {
+            bytesRead = din.read(buffer, bufferPointer = 0, BUFFER_SIZE);
+            if (bytesRead == -1)
+                buffer[0] = -1;
+        }
+ 
+        private byte read() throws IOException
+        {
+            if (bufferPointer == bytesRead)
+                fillBuffer();
+            return buffer[bufferPointer++];
+        }
+ 
+        public void close() throws IOException
+        {
+            if (din == null)
+                return;
+            din.close();
+        }
+    }
+}

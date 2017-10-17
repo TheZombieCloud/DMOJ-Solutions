@@ -1,0 +1,108 @@
+#include <iostream>
+#include <bits/stdc++.h>
+#include <vector>
+#include <unordered_map>
+
+using namespace std;
+
+int BIT [1000001];
+int arr [1000001];
+
+void update (int idx, int value){
+    while (idx<=1000000){
+        BIT[idx] += value;
+        idx += idx & (-idx);
+    }
+}
+
+int sum (int idx){
+    int sum = 0;
+    while (idx>0){
+        sum += BIT[idx];
+        idx -= idx & (-idx);
+    }
+    return sum;
+}
+
+int binarySearch (int value, int start2, int end3){
+    int mid = (start2+end3)/2;
+    int sum2 = sum(mid);
+    if (sum2==value){
+        if (arr[mid]==1){
+            return mid;
+        }
+        else {
+            binarySearch(value, start2, mid);
+        }
+    }
+    else if (sum2<value){
+        binarySearch(value, mid, end3);
+    }
+    else {
+        binarySearch(value, start2, mid);
+    }
+}
+
+int main()
+{
+    int queries;
+    scanf("%d", &queries);
+    char type [queries+1];
+    int start2 [queries+1];
+    int end2 [queries+1];
+    vector <int> scores;
+    int size3 = 1;
+    for (int i = 1;i<=queries;i++){
+        cin >> type[i];
+        if (type[i]=='N'){
+            scanf("%d %d", &start2[i], &end2[i]);
+            scores.push_back(end2[i]);
+            size3++;
+        }
+        else if (type[i]=='M'){
+            scanf("%d %d", &start2[i], &end2[i]);
+            scores.push_back(end2[i]);
+            size3++;
+        }
+        else {
+            scanf("%d", &start2[i]);
+        }
+    }
+    sort(scores.begin(), scores.end());
+    unordered_map <int, int> ranks;
+    unordered_map <int, int> ranks2;
+    int size2 = 0;
+    for (int i = 1;i<=queries;i++){
+        if (type[i]=='N'){
+            ranks.insert(make_pair(start2[i], end2[i]));
+            ranks2.insert(make_pair(end2[i],start2[i]));
+            int value = end2[i];
+            vector <int>::iterator index;
+            index = lower_bound(scores.begin(), scores.end(), value);
+            index++;
+            update((index-scores.begin()), 1);
+            arr[index-scores.begin()]++;
+            size2++;
+        }
+        else if (type[i]=='M'){
+            int value = ranks.at(start2[i]);
+            int after = end2[i];
+            vector <int>::iterator index;
+            index = lower_bound(scores.begin(),scores.end(),value) + 1;
+            vector <int>::iterator index2;
+            index2 = lower_bound(scores.begin(),scores.end(),after) + 1;
+            update((index-scores.begin()), -1);
+            update ((index2-scores.begin()), 1);
+            arr[index-scores.begin()]--;
+            arr[index2-scores.begin()]++;
+            ranks[start2[i]] = after;
+            ranks2.insert(make_pair(after, start2[i]));
+        }
+        else {
+            int place = size2-start2[i]+1;
+            int index4 = binarySearch(place, 0, size3) - 1;
+            printf("%d\n", ranks2.at(scores.at(index4)));
+        }
+    }
+    return 0;
+}

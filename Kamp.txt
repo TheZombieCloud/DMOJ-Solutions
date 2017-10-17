@@ -1,0 +1,94 @@
+#include <iostream>
+#include <bits/stdc++.h>
+
+using namespace std;
+
+vector <pair <int, long long>> adj [500005];
+long long lengths [500005], vis [500005], slengths[500005], sums [500005], final2[500005] ,fsums [500005];
+bool k2 [500005];
+
+void DFS (int cur, int pre){
+    for (int i = 0;i<adj[cur].size();i++){
+        int rn = adj[cur][i].first;
+        long long cost = adj[cur][i].second;
+        if (rn==pre) continue;
+        DFS(rn, cur);
+        if (k2[rn]&&lengths[rn]==0){
+            if (cost>lengths[cur]){
+                lengths[cur] = cost;
+                vis[cur] = rn;
+            }
+            else if (cost>slengths[cur]){
+                slengths[cur] = cost;
+            }
+            sums[cur] += cost;
+        }
+        else if (lengths[rn]!=0){
+            if (lengths[rn]+cost>lengths[cur]){
+                slengths[cur] = lengths[cur];
+                lengths[cur] = lengths[rn]+cost;
+                vis[cur] = rn;
+            }
+            else if (lengths[rn]+cost>slengths[cur]){
+                slengths[cur] = lengths[rn]+cost;
+            }
+            sums[cur] += sums[rn] + cost;
+        }
+    }
+}
+
+void DFS2 (int cur, long long curmax, int pre){
+    final2[cur] = max(lengths[cur], curmax);
+    for (int i = 0;i<adj[cur].size();i++){
+        int rn = adj[cur][i].first;
+        long long cost = adj[cur][i].second;
+        if (rn==pre) continue;
+        if (vis[cur]==rn){
+            DFS2(rn, max(slengths[cur]+cost, curmax+cost), cur);
+        }
+        else {
+            DFS2(rn, max (curmax+cost, lengths[cur]+cost), cur);
+        }
+    }
+}
+
+void DFS3 (int cur, long long curmax, int pre){
+    fsums[cur] = curmax+sums[cur];
+    for (int i = 0;i<adj[cur].size();i++){
+        int rn = adj[cur][i].first;
+        long long cost = adj[cur][i].second;
+        if (rn==pre) continue;
+        if (sums[rn]==0&&!k2[rn]){
+            DFS3(rn, curmax+sums[cur]+cost, cur);
+        }
+        else {
+            DFS3(rn, curmax+sums[cur]-sums[rn], cur);
+        }
+    }
+}
+
+int main()
+{
+    int nodes, k;
+    scanf("%d%d", &nodes, &k);
+    for (int i = 1;i<nodes;i++){
+        int a, b;
+        long long c;
+        scanf("%d%d%lld", &a, &b, &c);
+        adj[a].push_back(make_pair(b, c));
+        adj[b].push_back(make_pair(a, c));
+    }
+    int start = 0;
+    for (int i = 1;i<=k;i++){
+        int idx;
+        scanf("%d", &idx);
+        k2[idx] = true;
+        start = idx;
+    }
+    DFS(start, -1);
+    DFS2(start, 0, -1);
+    DFS3(start, 0, -1);
+    for (int i = 1;i<=nodes;i++){
+        printf("%lld\n", fsums[i]*2-final2[i]);
+    }
+}

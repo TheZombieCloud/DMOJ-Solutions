@@ -1,0 +1,140 @@
+import java.util.*;
+import java.io.*;
+/**
+ *
+ * @author alexm
+ */
+public class Patrol {
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) throws IOException{
+        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+        String [] tokens = input.readLine().split(" ");
+        int nodes = Integer.parseInt(tokens[0]);
+        int k = Integer.parseInt(tokens[1]);
+        ArrayList <Integer> [] adj = new ArrayList[nodes+1];
+        TreeSet <Integer> [] map = new TreeSet[nodes+1];
+        vis2 = new boolean[nodes+1];
+        for (int i = 1;i<=nodes;i++){
+            adj[i] = new ArrayList();
+            map[i] = new TreeSet();
+        }
+        for (int i = 1;i<nodes;i++){
+            tokens = input.readLine().split(" ");
+            int first = Integer.parseInt(tokens[0]);
+            int second = Integer.parseInt(tokens[1]);
+            adj[first].add(second);
+            adj[second].add(first);
+        }
+        int cost = 0;
+        if (k>=1){
+            Stack <Node> q = new Stack();
+            boolean [] vis = new boolean[nodes+1];
+            q.add(new Node(1, 0));
+            int max = -1;
+            int cur2 = -1;
+            while (!q.isEmpty()){
+                Node cur3 = q.pop();
+                int cur = cur3.cur;
+                int DFN = cur3.DFN;
+                if (!vis[cur]){
+                    if (DFN>max){
+                        max = DFN;
+                        cur2 = cur;
+                    }
+                    vis[cur] = true;
+                    for (int i = 0;i<adj[cur].size();i++){
+                        if (!vis[adj[cur].get(i)]){
+                            q.add(new Node(adj[cur].get(i), DFN+1));
+                        }
+                    }
+                }
+            }
+            q = new Stack();
+            vis = new boolean[nodes+1];
+            q.add(new Node(cur2, 0));
+            max = -1;
+            int cur4 = cur2;
+            cur2 = -1;
+            int [] places = new int [nodes+1];
+            while (!q.isEmpty()){
+                Node cur3 = q.pop();
+                int cur = cur3.cur;
+                int DFN = cur3.DFN;
+                if (!vis[cur]){
+                    if (DFN>max){
+                        max = DFN;
+                        cur2 = cur;
+                    }
+                    vis[cur] = true;
+                    for (int i = 0;i<adj[cur].size();i++){
+                        if (!vis[adj[cur].get(i)]){
+                            q.add(new Node(adj[cur].get(i), DFN+1));
+                            places[adj[cur].get(i)] = cur;
+                        }
+                    }
+                }
+            }
+            while (cur2!=cur4){
+                int before = places[cur2];
+                map[before].add(cur2);
+                map[cur2].add(before);
+                cur2 = before;
+            }
+            cost = 2*(nodes-1-max)+max+1;
+            if (k==1){
+                System.out.println(cost);
+            }
+        }
+        if (k==2) {
+            DFS(adj,map,1);
+            if (best<0){
+                best = 0;
+            }
+            System.out.println(cost-best+1);
+        }
+    }
+    static boolean [] vis2;
+    static long best = Long.MIN_VALUE;
+    static boolean g = false;
+    public static int DFS (ArrayList <Integer> [] adj, TreeSet <Integer> [] map, int cur){
+        if (!vis2[cur]){
+            vis2[cur] = true;
+            if (g&&adj[cur].size()==1){
+                return 0;
+            }
+            g = true;
+            int max = Integer.MIN_VALUE/2;
+            for (int i = 0;i<adj[cur].size();i++){
+                if (!vis2[adj[cur].get(i)]){
+                    int length = DFS(adj, map, adj[cur].get(i));
+                    if (map[cur].contains(adj[cur].get(i))){
+                        length -= 1;
+                    }
+                    else {
+                        length += 1;
+                    }
+                    if (length>best){
+                        best = length;
+                    }
+                    if (max+length>best){
+                        best = max+length;
+                    }
+                    max = Math.max(max, length);
+                }
+            }
+            return max;
+        }
+        return 0;
+    }
+    static class Node {
+        int cur;
+        int DFN;
+        Node (int cur, int DFN){
+            this.cur = cur;
+            this.DFN = DFN;
+        }
+    }
+}

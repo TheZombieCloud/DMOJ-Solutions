@@ -1,0 +1,116 @@
+import java.util.*;
+import java.io.*;
+/**
+ *
+ * @author Alexander Ma
+ */
+public class LHC {
+
+    /**
+     * @param args the command line arguments
+     */
+    static class Pair implements Comparable<Pair>{
+        int length;
+        long count;
+        Pair (int length, long count){
+            this.length = length;
+            this.count = count;
+        }
+        @Override
+        public int compareTo (Pair n){
+            if (n.length>length){
+                return 1;
+            }
+            return -1;
+        }
+    }
+    static long best;
+    static long count3;
+    static boolean [] vis;
+    static boolean g = false;
+    static Pair DFS (ArrayList <Integer> [] adj, int cur){
+         if (!vis[cur]){
+            vis[cur] = true;
+            int max = 0;
+            long count = 0;
+            if (g&&adj[cur].size()==1){
+                return new Pair (0, 1);
+            }
+            g = true;
+            for (int i = 0;i<adj[cur].size();i++){
+                if (!vis[adj[cur].get(i)]){
+                    Pair cur2 = DFS(adj, adj[cur].get(i));
+                    int length2 = cur2.length;
+                    long count2 = cur2.count;
+                    if (max+1+length2>best){
+                        best = max+1+length2;
+                        count3 = Math.max(count2, count * count2);
+                    }
+                    else if (max+1+length2==best){
+                        count3 += Math.max(count2, count * count2);
+                    }
+                    if (length2+1>max){
+                        max = length2+1;
+                        count = count2;
+                    }
+                    else if (length2+1==max){
+                        count += count2;
+                    }
+                }
+            }
+            return new Pair(max,count);
+        }
+        return new Pair(0,0);
+    }
+    public static void main(String[] args) throws IOException{
+        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+        int nodes = Integer.parseInt(input.readLine());
+        vis = new boolean [nodes+1];
+        ArrayList <Integer> [] adj = new ArrayList [nodes+1];
+        for (int i = 1;i<=nodes;i++){
+            adj[i] = new ArrayList();
+        }
+        for (int i = 1;i<nodes;i++){
+            String [] tokens = input.readLine().split(" ");
+            int first = Integer.parseInt(tokens[0]);
+            int second = Integer.parseInt(tokens[1]);
+            adj[first].add(second);
+            adj[second].add(first);
+        }
+        Stack <Node> q = new Stack();
+        q.add(new Node(1, 0));
+        boolean [] vis2 = new boolean [nodes+1];
+        int max = -1;
+        int cur3 = 0;
+        while (!q.isEmpty()){
+            Node cur = q.pop();
+            int cur2 = cur.cur;
+            int DFN = cur.DFN;
+            if (!vis2[cur2]){
+                vis2[cur2] = true;
+                if (DFN>max){
+                    max = DFN;
+                    cur3 = cur2;
+                }
+                for (int i = 0;i<adj[cur2].size();i++){
+                    if (!vis2[adj[cur2].get(i)]){
+                        q.add(new Node (adj[cur2].get(i), DFN+1));
+                    }
+                }
+            }
+        }
+        best = -1;
+        count3 = -1;
+        DFS(adj, cur3);
+        best++;
+        System.out.println(best + " " + count3);
+    }
+    static class Node {
+        int cur;
+        int DFN;
+        Node (int cur, int DFN){
+            this.cur = cur;
+            this.DFN = DFN;
+        }
+    }
+}

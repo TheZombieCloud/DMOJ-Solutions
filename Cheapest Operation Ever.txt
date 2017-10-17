@@ -1,0 +1,32 @@
+#include <iostream>
+#include <bits/stdc++.h>
+
+using namespace std;
+//simple solution. Use monotonicity property later.
+int main()
+{
+    long long people, wage;
+    scanf("%lld %lld", &people, &wage);
+    long long dp [people+1], crime[people+1];
+    crime[0] = 0;
+    for (int i = 1;i<=people;i++){
+        scanf("%lld", &crime[i]);
+    }
+    memset(dp, 0x3f, sizeof(dp));
+    sort(crime, crime+people+1);
+    dp[0] = 0;
+    dp[1] = wage;
+    int decision = 0;
+    for (int i = 2;i<=people;i++){
+        for (int j = decision;j<=i;j++){
+            long long dist = crime[j]-crime[i];
+            dist *= dist;
+            dist += wage;
+            if (dp[j-1]+dist<dp[i]){
+                decision = j-1;
+                dp[i] = dp[j-1] + dist;
+            }
+        }
+    }
+    printf("%lld", dp[people]);
+}
