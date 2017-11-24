@@ -1,0 +1,81 @@
+#include <iostream>
+#include <bits/stdc++.h>
+
+using namespace std;
+
+int LCA [300005][21] = {-1};
+int DFN [300005] = {0};
+int dp [300005] = {0};
+
+int LCA2 (int first, int sec, int MAXLOG){
+    if (DFN[first]<DFN[sec]){
+        return LCA2(sec, first, MAXLOG);
+    }
+    int dist = DFN[first]-DFN[sec];
+    while (dist>0){
+        int up = (int)(log10(dist)/log10(2));
+        first = LCA[first][up];
+        dist -= (1<<up);
+    }
+    if (first==sec){
+        return first;
+    }
+    for (int i = MAXLOG;i>=0;i--){
+        if ((LCA[first][i]!=-1)&&(LCA[sec][i]!=-1)&&(LCA[first][i]!=LCA[sec][i])){
+            first = LCA[first][i];
+            sec = LCA[sec][i];
+        }
+    }
+    return LCA[first][0];
+}
+
+int main()
+{
+    int nodes;
+    scanf("%d", &nodes);
+    int MAXLOG = (int)floor(log10(nodes)/log10(2));
+    LCA[0][0] = -1;
+    for (int i = 1;i<=nodes;i++){
+        char temp;
+        scanf(" %c ", &temp);
+        dp[i] = i;
+        if (temp == 'a'){
+            int temp2;
+            scanf("%d", &temp2);
+            int from = dp[temp2];
+            DFN[i] = DFN[from]+1;
+            LCA[i][0] = dp[from];
+            for (int c = 1;c<=MAXLOG;c++){
+                LCA[i][c] = -1;
+                if (LCA[i][c-1]!=-1){
+                    LCA[i][c] = LCA[LCA[i][c-1]][c-1];
+                }
+            }
+        }
+        else if (temp == 'b'){
+            int temp2;
+            scanf("%d", &temp2);
+            int from = dp[temp2];
+            printf("%d\n", from);
+            dp[i] = LCA[from][0];
+            from = LCA[from][0];
+            DFN[i] = DFN[from];
+            for (int c = 0;c<=MAXLOG;c++){
+                LCA[i][c] = LCA[from][c];
+            }
+        }
+        else {
+            int temp2, temp3;
+            scanf("%d%d", &temp2, &temp3);
+            int from = dp[temp2];
+            int from2 = dp[temp3];
+            int ans = LCA2(from, from2, MAXLOG);
+            DFN[i] = DFN[from];
+            dp[i] = from;
+            for (int c = 0;c<=MAXLOG;c++){
+                LCA[i][c] = LCA[from][c];
+            }
+            printf("%d\n", DFN[ans]);
+        }
+    }
+}

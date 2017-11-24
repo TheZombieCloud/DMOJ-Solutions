@@ -1,0 +1,184 @@
+import java.util.*;
+import java.io.*;
+/**
+ *
+ * @author Alexander Ma
+ */
+public class DistributionChannel {
+    static int [] p;
+    static int [] rank;
+    static ArrayList <Integer> [] MST;
+    static ArrayList <Long> [] DST;
+    static ArrayList <Integer> fir;
+    static ArrayList <Integer> second;
+    static ArrayList <Long> cost2;
+    static int [][] LCA;
+    static long [][] DCA;
+    static int [] DFN;
+    static int [] par;
+    static long ans = 0;
+    
+    static void DFS (int cur, int pre, long cost2, int lvl){
+        for (int i = 0;i<MST[cur].size();i++){
+            int rn = MST[cur].get(i);
+            long cost = DST[cur].get(i);
+            if (rn==pre) continue;
+            DFS(rn, cur, cost, lvl+1);
+        }
+        DFN[cur] = lvl;
+        par[cur] = pre;
+        LCA[cur][0] = pre;
+        DCA[cur][0] = cost2;
+    }
+    
+    static long LCA (int first, int sec, int MAXLOG){
+        if (DFN[first]<DFN[sec]){
+            return LCA(sec, first, MAXLOG);
+        }
+        int dist = DFN[first]-DFN[sec];
+        long ans = -1;
+        while (dist>0){
+            int up = (int)(Math.log(dist)/Math.log(2));
+            if (DCA[first][up]>ans){
+                ans = DCA[first][up];
+            }
+            first = LCA[first][up];
+            dist -= (1<<up);
+        }
+        if (first==sec){
+            return ans;
+        }
+        for (int i = MAXLOG;i>=0;i--){
+            if ((LCA[first][i]!=-1)&&(LCA[sec][i]!=-1)&&(LCA[first][i]!=LCA[sec][i])){
+                if (DCA[first][i]>ans){
+                    ans = DCA[first][i];
+                }
+                if (DCA[sec][i]>ans){
+                    ans = DCA[sec][i];
+                }
+                first = LCA[first][i];
+                sec = LCA[sec][i];
+            }
+        }
+        if (par[first]==-1||par[sec]==-1){
+            ans = -1;
+        }
+        else {
+            ans = Math.max(ans, Math.max(DCA[first][0], DCA[sec][0]));
+        }
+        return ans;
+    }
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) throws IOException{
+        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+        int nodes, edges;
+        String [] tokens = input.readLine().split(" ");
+        nodes = Integer.parseInt(tokens[0]);
+        edges = Integer.parseInt(tokens[1]);
+        MST = new ArrayList [nodes+1];
+        DST = new ArrayList [nodes+1];
+        p = new int [nodes+1];
+        rank = new int [nodes+1];
+        for (int i = 1;i<=nodes;i++){
+            MST[i] = new ArrayList();
+            DST[i] = new ArrayList();
+            p[i] = i;
+        }
+        PriorityQueue <Query> q = new PriorityQueue();
+        for (int i = 0;i<edges;i++){
+            tokens = input.readLine().split(" ");
+            int first = Integer.parseInt(tokens[0]);
+            int sec = Integer.parseInt(tokens[1]);
+            int cost = Integer.parseInt(tokens[2]);
+            q.add(new Query(first, sec, cost));
+        }
+        fir = new ArrayList();
+        second = new ArrayList();
+        cost2 = new ArrayList();
+        int count = 0;
+        while (!q.isEmpty()){
+            Query n = q.poll();
+            int first = n.a;
+            int sec = n.b;
+            long cost = n.c;
+            int f1 = Find(first);
+            int f2 = Find(sec);
+            if (f1!=f2){
+                MST[first].add(sec);
+                MST[sec].add(first);
+                DST[first].add(cost);
+                DST[sec].add(cost);
+                Union(f1,f2);
+                ans += cost;
+                count++;
+            }
+            else {
+                fir.add(first);
+                second.add(sec);
+                cost2.add(cost);
+            }
+        }
+        if (count!=nodes-1){
+            System.out.println(-1);
+            System.exit(0);
+        }
+        LCA = new int [nodes+1][(int)(Math.log(nodes)/Math.log(2))+1];
+        DCA = new long [nodes+1][(int)(Math.log(nodes)/Math.log(2))+1];
+        DFN = new int [nodes+1];
+        par = new int [nodes+1];
+        DFS(1,-1,-1, 0);
+        for (int i = 1;i<=(int)(Math.log(nodes)/Math.log(2));i++){
+            for (int c = 1;c<=nodes;c++){
+                LCA[c][i] = -1;
+                if (LCA[c][i-1]!=-1){
+                    LCA[c][i] = LCA[LCA[c][i-1]][i-1];
+                    DCA[c][i] = Math.max(DCA[c][i-1], DCA[LCA[c][i-1]][i-1]);
+                }
+            }
+        }
+        long ans2 = Long.MAX_VALUE;
+        for (int i = 0;i<fir.size();i++){
+            int first = fir.get(i);
+            int sec = second.get(i);
+            long cost = cost2.get(i);
+            long cost2 = LCA(first, sec, (int)(Math.log(nodes)/Math.log(2)));
+            if (cost!=cost2&&cost2!=-1&&cost2!=0){
+                ans2 = Math.min(ans2, ans-cost2+cost);
+            }
+        }
+        if (ans2==Long.MAX_VALUE){
+            ans2 = -1;
+        }
+        System.out.println(ans2);
+    }
+    static class Query implements Comparable <Query> {
+        int a;
+        int b;
+        int c;
+        Query (int a, int b, int c){
+            this.a = a;
+            this.b = b;
+            this.c = c;
+        }
+        @Override
+        public int compareTo(Query n){
+            if (c>n.c){
+                return 1;
+            }
+            return -1;
+        }
+    }
+    static int Find(int x){
+        if (x!=p[x])p[x] = Find(p[x]);
+        return p[x];
+    }
+    static void Union(int x, int y){
+        if (rank[x]>rank[y])p[y] = x;
+        else {
+            p[x] = y;
+            if (rank[x]==rank[y])rank[y]++;
+        }
+    }
+}
